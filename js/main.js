@@ -35,6 +35,10 @@ const words = [
 // Init word
 let randomWord;
 
+// Hard word
+let hardWords = [];
+console.log(hardWords);
+
 // Init score
 let score = 0;
 
@@ -54,6 +58,28 @@ difficultySelect.value =
     : "medium";
 
 text.focus();
+
+async function getHardWord() {
+  const res = await fetch(`https://random-words-api.vercel.app/word`);
+  // console.log(res);
+  const data = await res.json();
+  console.log(data[0]);
+  const hardWord = data[0].word.toLowerCase();
+  if (!isValid(hardWord)) {
+    // console.log("Invalid Word");
+    getHardWord();
+  }
+  // def.push(data[0].definition);
+  hardWords.push(hardWord);
+  word.innerHTML = hardWord;
+
+  console.log(hardWord);
+  // displayWord();
+}
+
+function isValid(str) {
+  return !/[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g.test(str);
+}
 
 // Start counting down
 const timeInterval = setInterval(updateTime, 1000);
@@ -98,13 +124,26 @@ function updateScore() {
   scoreEl.innerHTML = score;
 }
 
-addWordToDOM();
+checkDificulty();
+
+function checkDificulty() {
+  if (difficulty === "hard") {
+    getHardWord();
+  } else {
+    addWordToDOM();
+  }
+}
 
 // Event listeners
 text.addEventListener("input", (e) => {
   const insertedText = e.target.value;
-  if (insertedText === randomWord) {
-    addWordToDOM();
+  if (insertedText === randomWord || insertedText === hardWords[0]) {
+    if (difficulty === "hard") {
+      hardWords = [];
+      getHardWord();
+    } else {
+      addWordToDOM();
+    }
     updateScore();
 
     // Clear value
@@ -130,4 +169,5 @@ settingsBtn.addEventListener("click", () => {
 settingsForm.addEventListener("change", (e) => {
   difficulty = e.target.value;
   localStorage.setItem("difficulty", difficulty);
+  checkDificulty();
 });
